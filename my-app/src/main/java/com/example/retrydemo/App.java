@@ -1,6 +1,5 @@
 package com.example.retrydemo;
 
-import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import com.amazonaws.AmazonClientException;
@@ -13,7 +12,6 @@ import com.amazonaws.retry.RetryPolicy;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagement;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClientBuilder;
 import com.amazonaws.services.identitymanagement.model.ListRolesRequest;
-import com.amazonaws.services.identitymanagement.model.ListRolesResult;
 
 /**
  * Hello world!
@@ -58,7 +56,12 @@ public class App {
 
 			return PredefinedRetryPolicies.DEFAULT_RETRY_CONDITION.shouldRetry(request, exception, retriesAttempted);
 		};
-		return new RetryPolicy(retryCondition, PredefinedRetryPolicies.DEFAULT_BACKOFF_STRATEGY, MAX_RETRIES,
+
+		RetryPolicy.BackoffStrategy backoffStrategy = (AmazonWebServiceRequest request, AmazonClientException exception, int retries) -> {
+			return Math.min((long) Math.pow(2, retries) + 100L, 10000L);
+		};
+
+		return new RetryPolicy(retryCondition, backoffStrategy, MAX_RETRIES,
 				PredefinedRetryPolicies.DEFAULT.isMaxErrorRetryInClientConfigHonored());
 	}
 }
